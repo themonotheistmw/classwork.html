@@ -1,1 +1,2254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ABMT School ERP — Automated Interactive Presentation</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    .slide-enter {
+      animation: fadeSlideIn 0.28s ease-out forwards;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .auto-highlight {
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.55) !important;
+      transition: box-shadow 0.2s ease;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    #demoPointer {
+      position: fixed;
+      z-index: 60;
+      pointer-events: none;
+      transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1), top 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+      transform: translate(-18%, 4px);
+    }
+    @keyframes pointerTap {
+      0%, 100% { transform: translate(-18%, 4px) scale(1); }
+      50% { transform: translate(-18%, -4px) scale(1.12); }
+    }
+    .pointer-tap {
+      animation: pointerTap 0.45s ease-in-out 2;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden">
 
+  <!-- Top Presentation Header -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center font-extrabold text-sm tracking-tight shrink-0 shadow-sm">
+          ABMT
+        </div>
+        <div class="truncate">
+          <div class="text-sm font-bold leading-tight truncate">ABMT School ERP</div>
+          <div class="text-[11px] text-slate-400 truncate">Abubakr Memorial Trust · Lolipora, Pattan</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <button id="fullAutoDemoBtn" type="button" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
+          ▶ Auto-Play All
+        </button>
+        <select id="speedSelect" title="Presentation Speed" class="hidden sm:block px-2 py-1.5 rounded-lg bg-slate-800 text-xs font-semibold text-slate-200 border border-slate-700 focus:outline-none">
+          <option value="1.8" selected>Ultra Slow</option>
+          <option value="1.35">Very Slow</option>
+          <option value="0.9">Normal</option>
+        </select>
+        <button id="soundToggleBtn" type="button" title="Toggle Typing & Message Sounds" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700 transition">
+          🔊 Sound On
+        </button>
+        <button id="fullscreenBtn" type="button" title="Toggle Full Screen" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition">
+          ⛶ Full Screen
+        </button>
+        <span id="roleBadge" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+          Overview
+        </span>
+        <span id="slideCounter" class="text-xs font-semibold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
+          1 / 11
+        </span>
+        <button id="toggleMenuBtn" type="button" class="px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition">
+          Slides ▾
+        </button>
+      </div>
+    </div>
+
+    <!-- Auto-Demo Live Status Banner -->
+    <div id="autoStatusBanner" class="hidden bg-emerald-950/90 border-t border-emerald-700/50 px-4 py-1.5">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 text-xs text-emerald-200">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span id="autoStatusText" class="font-medium">Auto-Demo running...</span>
+        </div>
+        <button id="stopAutoBtn" type="button" class="text-[11px] font-bold text-rose-300 hover:text-rose-200 underline">Stop</button>
+      </div>
+    </div>
+
+    <!-- Slide Quick-Jump Drawer -->
+    <div id="slideMenu" class="hidden bg-slate-800 border-t border-slate-700 px-4 py-3">
+      <div id="slideMenuGrid" class="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2"></div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="w-full h-1 bg-slate-800">
+      <div id="progressBar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 9%;"></div>
+    </div>
+  </header>
+
+  <!-- Convenient Role Quick-Jump Bar for School & Parents -->
+  <nav class="bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto">
+      <div class="flex items-center gap-1.5 shrink-0">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Quick Switch:</span>
+        <button type="button" data-quick-role="0" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">Overview</button>
+        <button type="button" data-quick-role="2" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition">🏛 Admin End</button>
+        <button type="button" data-quick-role="3" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition">👩‍🏫 Teacher End</button>
+        <button type="button" data-quick-role="5" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 transition">📸 All-Subjects Diary</button>
+        <button type="button" data-quick-role="8" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition">👨‍👩‍👧 Parent Portal</button>
+        <button type="button" data-quick-role="9" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition">✓ Principal Audit</button>
+      </div>
+      <span class="hidden lg:inline text-[11px] font-medium text-slate-400 shrink-0">ABMT Lolipora · Academic Session 2026</span>
+    </div>
+  </nav>
+
+  <!-- Main Slide Stage -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-5 flex flex-col gap-3.5">
+    <!-- Red Highlighted Action Callout on EVERY Page -->
+    <div id="redActionBanner" class="bg-red-50 border-l-4 border-red-600 rounded-r-xl px-4 py-2.5 shadow-sm flex items-center gap-2.5">
+      <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shrink-0"></span>
+      <div class="text-xs sm:text-sm font-extrabold text-red-600 tracking-tight" id="redActionText">
+        WHAT WE ARE GOING TO DO HERE: Present the complete ABMT School ERP vision and launch the live automated walkthrough.
+      </div>
+    </div>
+    <div id="slideStage" class="flex-1 flex flex-col"></div>
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <footer class="bg-white border-t border-slate-200 sticky bottom-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+      <button id="prevBtn" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+        ← Previous
+      </button>
+
+      <div class="hidden md:flex items-center gap-1.5 text-xs text-slate-500">
+        <span>Click <strong class="text-emerald-700">▶ Auto-Play All</strong> for a hands-free demo with typing sounds, diary image broadcast &amp; auto-sent messages</span>
+      </div>
+
+      <button id="nextBtn" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:cursor-not-allowed transition shadow-sm">
+        Next →
+      </button>
+    </div>
+  </footer>
+
+  <!-- Floating ☝️ Presenter Pointer -->
+  <div id="demoPointer" class="hidden opacity-0 flex items-center gap-1.5">
+    <span class="text-3xl drop-shadow-md select-none">☝️</span>
+    <span id="demoPointerLabel" class="px-2.5 py-1 rounded-full bg-red-600 text-white text-[11px] font-extrabold shadow-lg whitespace-nowrap border border-white/40">
+      Pointing here...
+    </span>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-16 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    // =========================================================================
+    // 1. WEB AUDIO API SOUND ENGINE (Typing Clicks, Check Pops, Message Chime)
+    // =========================================================================
+    const soundEngine = {
+      ctx: null,
+      enabled: true,
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      },
+      playKeyClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          const freq = 520 + Math.random() * 240;
+          osc.frequency.setValueAtTime(freq, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.025);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.03);
+        } catch (e) {}
+      },
+      playCheckClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, now);
+          osc.frequency.exponentialRampToValueAtTime(760, now + 0.06);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.075);
+        } catch (e) {}
+      },
+      playMessageSent() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const now = this.ctx.currentTime;
+          [587.33, 880].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.09);
+            gain.gain.setValueAtTime(0.09, now + i * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.22);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.09);
+            osc.stop(now + i * 0.09 + 0.24);
+          });
+        } catch (e) {}
+      }
+    };
+
+    // =========================================================================
+    // 2. SHARED LIVE ERP STATE (Syncs seamlessly across all 11 slides)
+    // =========================================================================
+    const erpState = {
+      currentSlide: 0,
+      liveActionsCount: 0,
+      autoRunId: 0,
+      isFullAutoPlaying: false,
+      speedMultiplier: 1.8,
+      selectedDiaryClass: 'Class 7',
+      diarySendOptions: {
+        whatsappGroupImg: true,
+        parentApp: true,
+        smsAbsentee: false,
+        principalArchive: true
+      },
+      sentDiaryImageUrl: null,
+      sentDiaryMeta: null,
+      students: [
+        { id: 1, roll: '01', name: 'Aarif Ahmad Dar', className: 'Class 7', parent: 'Gh. Mohammad Dar', phone: '+91 94190-XXXXX', status: 'P', feeStatus: 'Paid', feeAmount: 1800, receiptNo: 'ABMT-2026-101' },
+        { id: 2, roll: '02', name: 'Zainab Gul', className: 'Class 7', parent: 'Gulzar Ahmad', phone: '+91 97970-XXXXX', status: 'P', feeStatus: 'Pending', feeAmount: 1800, receiptNo: '' },
+        { id: 3, roll: '03', name: 'Bilal Farooq Lone', className: 'Class 7', parent: 'Farooq Ahmad Lone', phone: '+91 96220-XXXXX', status: 'P', feeStatus: 'Paid', feeAmount: 1800, receiptNo: 'ABMT-2026-102' },
+        { id: 4, roll: '04', name: 'Mehak Jan', className: 'Class 7', parent: 'Tariq Ahmad Mir', phone: '+91 70060-XXXXX', status: 'P', feeStatus: 'Paid', feeAmount: 1800, receiptNo: 'ABMT-2026-103' },
+        { id: 5, roll: '05', name: 'Umer Rashid Wani', className: 'Class 7', parent: 'Abdul Rashid Wani', phone: '+91 99060-XXXXX', status: 'L', feeStatus: 'Pending', feeAmount: 1800, receiptNo: '' }
+      ],
+      teachers: [
+        { id: 't1', name: 'Ms. Inabat Ali', subject: 'Alquran & Islamic Studies', assignedClass: 'Class 7', attendanceDone: true, cwDone: true, hwDone: true, verified: true },
+        { id: 't2', name: 'Mr. Ab Majid', subject: 'Computer Science & Alquran', assignedClass: 'Class 6 & 7', attendanceDone: true, cwDone: true, hwDone: true, verified: true },
+        { id: 't3', name: 'Mr. Mehraj Wani', subject: 'Science & Mathematics', assignedClass: 'Class 7', attendanceDone: true, cwDone: true, hwDone: true, verified: false },
+        { id: 't4', name: 'Ms. Saima Rashid', subject: 'English & Urdu', assignedClass: 'Class 5', attendanceDone: true, cwDone: false, hwDone: false, verified: false }
+      ],
+      academicLogs: [
+        {
+          id: 'log-1',
+          date: '17 Nov 2026',
+          className: 'Class 7',
+          subject: 'Science',
+          teacher: 'Mr. Mehraj Wani',
+          chapter: 'Ch. 6: Physical & Chemical Changes',
+          classwork: 'Explained rusting of iron, galvanization, and conducted classroom reaction examples.',
+          topicCompleted: true,
+          homework: 'Write 5 differences between physical and chemical changes (Page 64).',
+          dueDate: '2026-11-18',
+          parentChecked: false,
+          adminVerified: true,
+          timestamp: '10:15 AM'
+        },
+        {
+          id: 'log-2',
+          date: '17 Nov 2026',
+          className: 'Class 7',
+          subject: 'Computer Science',
+          teacher: 'Mr. Ab Majid',
+          chapter: 'Ch. 4: Introduction to HTML & Web Pages',
+          classwork: 'Demonstrated basic HTML tags (h1, p, ul, img) on lab systems.',
+          topicCompleted: true,
+          homework: 'Create a simple HTML page with your school name and 3 favorite subjects.',
+          dueDate: '2026-11-19',
+          parentChecked: true,
+          adminVerified: true,
+          timestamp: '11:05 AM'
+        },
+        {
+          id: 'log-3',
+          date: '17 Nov 2026',
+          className: 'Class 7',
+          subject: 'English',
+          teacher: 'Ms. Saima Rashid',
+          chapter: 'Unit 5: Active & Passive Voice',
+          classwork: 'Practiced 10 tense conversion sentences on the whiteboard.',
+          topicCompleted: true,
+          homework: 'Complete Grammar Workbook Exercise B (Q1–Q8).',
+          dueDate: '2026-11-18',
+          parentChecked: false,
+          adminVerified: true,
+          timestamp: '09:40 AM'
+        },
+        {
+          id: 'log-4',
+          date: '17 Nov 2026',
+          className: 'Class 7',
+          subject: 'Urdu',
+          teacher: 'Ms. Saima Rashid',
+          chapter: 'Sabaq 9: Kashmir Ki Wadi',
+          classwork: 'Reading comprehension and difficult word meanings explained.',
+          topicCompleted: true,
+          homework: 'Write 10 lines summary in neat Urdu handwriting.',
+          dueDate: '2026-11-18',
+          parentChecked: false,
+          adminVerified: true,
+          timestamp: '11:45 AM'
+        },
+        {
+          id: 'log-5',
+          date: '17 Nov 2026',
+          className: 'Class 7',
+          subject: 'Islamic Studies & Alquran',
+          teacher: 'Ms. Inabat Ali',
+          chapter: 'Surah Al-Mulk (Ayat 1–10)',
+          classwork: 'Tajweed recitation practice and Urdu translation.',
+          topicCompleted: true,
+          homework: 'Memorize Ayat 6–10 with proper Makharij.',
+          dueDate: '2026-11-19',
+          parentChecked: false,
+          adminVerified: true,
+          timestamp: '12:20 PM'
+        },
+        {
+          id: 'log-6',
+          date: '17 Nov 2026',
+          className: 'Class 7',
+          subject: 'Social Science',
+          teacher: 'Mr. Mehraj Wani',
+          chapter: 'Ch. 7: Geography of Jammu & Kashmir',
+          classwork: 'Mapped major rivers (Jhelum, Chenab, Indus) and passes.',
+          topicCompleted: true,
+          homework: 'Label 5 rivers on the outline map of J&K.',
+          dueDate: '2026-11-19',
+          parentChecked: false,
+          adminVerified: true,
+          timestamp: '01:10 PM'
+        }
+      ],
+      sentMessages: [
+        { id: 'm1', to: 'All Class 7 Parents', channel: 'App Notice', text: 'Winter uniform schedule begins next Monday. Please check timetable.', time: '09:00 AM' }
+      ],
+      marksStudent: {
+        name: 'Aarif Ahmad Dar',
+        roll: '12',
+        className: 'Class 7',
+        session: '2026',
+        subjects: [
+          { name: 'English', f1: 27, f2: 28, f3: 36, max: 100 },
+          { name: 'Mathematics', f1: 28, f2: 29, f3: 37, max: 100 },
+          { name: 'Science', f1: 27, f2: 28, f3: 36, max: 100 },
+          { name: 'Social Science', f1: 26, f2: 27, f3: 35, max: 100 },
+          { name: 'Urdu', f1: 28, f2: 27, f3: 37, max: 100 },
+          { name: 'Kashmiri', f1: 27, f2: 28, f3: 36, max: 100 },
+          { name: 'Computer Science', f1: 29, f2: 29, f3: 38, max: 100 },
+          { name: 'Islamic Studies', f1: 28, f2: 28, f3: 36, max: 100 },
+          { name: 'Arabic', f1: 26, f2: 27, f3: 35, max: 100 },
+          { name: 'Alquran', f1: 28, f2: 28, f3: 37, max: 100 }
+        ]
+      },
+      lastReceipt: null
+    };
+
+    const slidesMeta = [
+      { title: 'Title & Vision', role: 'Overview', redCue: 'WE ARE GOING TO DO THIS: Introduce the complete ABMT School ERP across Admin, Teacher, and Parent portals.' },
+      { title: 'System Architecture', role: 'Overview', redCue: 'WE ARE GOING TO DO THIS: Show how data entered once syncs automatically between Teachers, Principal, and Parents.' },
+      { title: 'Admin Master Dashboard', role: 'Admin End', redCue: 'WE ARE GOING TO DO THIS: Type a new student admission live, check verification, and auto-send a Welcome SMS.' },
+      { title: 'Daily Attendance', role: 'Teacher End', redCue: 'WE ARE GOING TO DO THIS: Mark daily class attendance and automatically send an Absentee SMS alert to parents.' },
+      { title: 'Classwork & Homework', role: 'Teacher End', redCue: 'WE ARE GOING TO DO THIS: Type today\'s Classwork Done & Homework Given, check completion, and publish live.' },
+      { title: 'All-Subjects Diary Image', role: 'Class Broadcast', redCue: 'WE ARE GOING TO DO THIS: Compile all subjects CW/HW into one picture, pick delivery channels, and send to the Class Group.' },
+      { title: 'Exams & Marks Card', role: 'Teacher / Admin', redCue: 'WE ARE GOING TO DO THIS: Enter F1/F2/F3 marks live and watch the ABMT Digital Marks Card recalculate automatically.' },
+      { title: 'Fee Management', role: 'Admin End', redCue: 'WE ARE GOING TO DO THIS: Collect a pending tuition fee, generate an instant receipt, and auto-send it to the parent.' },
+      { title: 'Parent & Student Portal', role: 'Parent End', redCue: 'WE ARE GOING TO DO THIS: View all auto-received school messages, diary updates, and check off completed homework.' },
+      { title: 'Principal Audit & Checks', role: 'Admin End', redCue: 'WE ARE GOING TO DO THIS: Audit every teacher\'s daily attendance, classwork, and homework logs and verify them in one click.' },
+      { title: 'Impact & Summary', role: 'Closing', redCue: 'WE ARE GOING TO DO THIS: Review the live session summary and the school-wide benefits for ABMT and parents.' }
+    ];
+
+    // =========================================================================
+    // 3. HELPERS & CANVAS IMAGE GENERATOR FOR ALL-SUBJECTS DAILY DIARY
+    // =========================================================================
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const bg = type === 'success' ? 'bg-emerald-600' : type === 'msg' ? 'bg-sky-600' : type === 'info' ? 'bg-slate-800' : 'bg-amber-600';
+      const icon = type === 'msg' ? '✉' : type === 'success' ? '✓' : 'ℹ';
+      el.className = `${bg} text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg flex items-center gap-2 transition-all duration-300`;
+      el.innerHTML = `<span class="font-bold">${icon}</span><span>${message}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(6px)';
+        setTimeout(() => el.remove(), 300);
+      }, 3000);
+    }
+
+    function sendAutoMessage(to, channel, text) {
+      erpState.sentMessages.unshift({
+        id: 'm-' + Date.now(),
+        to, channel, text,
+        time: 'Just now'
+      });
+      soundEngine.playMessageSent();
+      showToast(`Auto-${channel} sent to ${to}`, 'msg');
+    }
+
+    function setAutoBanner(visible, text = '') {
+      const banner = document.getElementById('autoStatusBanner');
+      const label = document.getElementById('autoStatusText');
+      const redEl = document.getElementById('redActionText');
+      if (visible) {
+        banner.classList.remove('hidden');
+        label.textContent = text;
+        if (redEl && text) redEl.textContent = 'WE ARE GOING TO DO THIS NOW: ' + text;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function stopAllAutoDemos() {
+      erpState.autoRunId++;
+      erpState.isFullAutoPlaying = false;
+      setAutoBanner(false);
+      hidePointer();
+      const btn = document.getElementById('fullAutoDemoBtn');
+      if (btn) {
+        btn.innerHTML = '▶ Auto-Play All';
+        btn.classList.remove('bg-rose-500', 'hover:bg-rose-400', 'text-white');
+        btn.classList.add('bg-emerald-500', 'hover:bg-emerald-400', 'text-slate-950');
+      }
+    }
+
+    function sleep(ms, runId) {
+      const scaled = Math.round(ms * (erpState.speedMultiplier || 1));
+      return new Promise(resolve => {
+        setTimeout(() => resolve(runId === erpState.autoRunId), scaled);
+      });
+    }
+
+    function smoothScrollToEl(el) {
+      if (!el) return;
+      try {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      } catch (e) {}
+    }
+
+    function hidePointer() {
+      const ptr = document.getElementById('demoPointer');
+      if (ptr) {
+        ptr.classList.add('opacity-0', 'hidden');
+        ptr.classList.remove('pointer-tap');
+      }
+    }
+
+    async function pointAtElement(el, label, runId) {
+      if (!el || runId !== erpState.autoRunId) return false;
+      smoothScrollToEl(el);
+      if (!(await sleep(550, runId))) return false;
+      const ptr = document.getElementById('demoPointer');
+      const lbl = document.getElementById('demoPointerLabel');
+      if (!ptr || runId !== erpState.autoRunId) return false;
+
+      const rect = el.getBoundingClientRect();
+      const x = Math.min(window.innerWidth - 180, Math.max(16, rect.left + Math.min(rect.width * 0.35, 90)));
+      const y = Math.min(window.innerHeight - 60, Math.max(64, rect.bottom - 4));
+
+      if (lbl) lbl.textContent = label || 'Entering here...';
+      ptr.style.left = x + 'px';
+      ptr.style.top = y + 'px';
+      ptr.classList.remove('hidden', 'opacity-0');
+      ptr.classList.remove('pointer-tap');
+      void ptr.offsetWidth;
+      ptr.classList.add('pointer-tap');
+      el.classList.add('auto-highlight');
+      soundEngine.playCheckClick();
+      if (!(await sleep(950, runId))) {
+        el.classList.remove('auto-highlight');
+        hidePointer();
+        return false;
+      }
+      return true;
+    }
+
+    async function autoPanSlide(runId, pauseTop = 2600, pauseBottom = 3200) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!(await sleep(pauseTop, runId))) return false;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      if (maxScroll > 60) {
+        window.scrollTo({ top: maxScroll, behavior: 'smooth' });
+        if (!(await sleep(pauseBottom, runId))) return false;
+      } else {
+        if (!(await sleep(pauseBottom, runId))) return false;
+      }
+      return true;
+    }
+
+    async function typeIntoInput(el, text, speed, runId, pointerLabel = 'Typing here...') {
+      if (!el || runId !== erpState.autoRunId) return false;
+      if (!(await pointAtElement(el, pointerLabel, runId))) return false;
+      el.value = '';
+      el.focus();
+      for (let i = 0; i < text.length; i++) {
+        if (runId !== erpState.autoRunId) {
+          el.classList.remove('auto-highlight');
+          return false;
+        }
+        el.value += text.charAt(i);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        soundEngine.playKeyClick();
+        const ok = await sleep(speed, runId);
+        if (!ok) {
+          el.classList.remove('auto-highlight');
+          return false;
+        }
+      }
+      el.classList.remove('auto-highlight');
+      hidePointer();
+      return true;
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const words = String(text || '').split(' ');
+      const lines = [];
+      let current = '';
+      for (const w of words) {
+        const test = current ? current + ' ' + w : w;
+        if (ctx.measureText(test).width > maxWidth && current) {
+          lines.push(current);
+          current = w;
+        } else {
+          current = test;
+        }
+      }
+      if (current) lines.push(current);
+      return lines.slice(0, 2);
+    }
+
+    function generateDailyDiaryImage(className) {
+      const logs = erpState.academicLogs.filter(l => l.className === className);
+      const rowH = 58;
+      const headerH = 104;
+      const tableHeadH = 34;
+      const footerH = 44;
+      const width = 820;
+      const height = headerH + tableHeadH + Math.max(logs.length, 1) * rowH + footerH + 16;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      // Header Banner
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, headerH);
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(0, headerH - 5, width, 5);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 22px Inter, Arial, sans-serif';
+      ctx.fillText('ABUBAKR MEMORIAL TRUST (ABMT)', 24, 38);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 13px Inter, Arial, sans-serif';
+      ctx.fillText('Lolipora, Pattan · Daily Consolidated Classwork & Homework Diary', 24, 60);
+
+      // Class & Date Pill
+      ctx.fillStyle = '#059669';
+      ctx.fillRect(24, 72, 235, 22);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 12px Inter, Arial, sans-serif';
+      ctx.fillText(`${className.toUpperCase()}  |  DATE: 17 NOV 2026`, 34, 87);
+
+      // Table Header
+      const yStart = headerH + 8;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(16, yStart, width - 32, tableHeadH);
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '700 12px Inter, Arial, sans-serif';
+      ctx.fillText('SUBJECT', 26, yStart + 21);
+      ctx.fillText('CLASSWORK DONE TODAY', 175, yStart + 21);
+      ctx.fillText('HOMEWORK GIVEN', 505, yStart + 21);
+
+      // Rows
+      logs.forEach((log, i) => {
+        const y = yStart + tableHeadH + i * rowH;
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        ctx.fillRect(16, y, width - 32, rowH);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(16, y, width - 32, rowH);
+
+        // Subject
+        ctx.fillStyle = '#047857';
+        ctx.font = '700 12px Inter, Arial, sans-serif';
+        ctx.fillText(log.subject, 26, y + 22);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 10px Inter, Arial, sans-serif';
+        ctx.fillText(log.teacher, 26, y + 38);
+
+        // Classwork
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '500 11px Inter, Arial, sans-serif';
+        const cwLines = wrapCanvasText(ctx, log.classwork, 310);
+        cwLines.forEach((line, li) => ctx.fillText(line, 175, y + 22 + li * 16));
+
+        // Homework
+        ctx.fillStyle = '#0f172a';
+        const hwLines = wrapCanvasText(ctx, log.homework, 285);
+        hwLines.forEach((line, li) => ctx.fillText(line, 505, y + 22 + li * 16));
+      });
+
+      // Footer
+      const fy = height - footerH + 14;
+      ctx.fillStyle = '#475569';
+      ctx.font = '600 11px Inter, Arial, sans-serif';
+      ctx.fillText('Auto-generated by ABMT School ERP · Verified by Principal Office', 24, fy + 10);
+      ctx.fillStyle = '#059669';
+      ctx.font = '700 11px Inter, Arial, sans-serif';
+      ctx.fillText(`Total Subjects: ${logs.length} · Sent to ${className} Group`, width - 255, fy + 10);
+
+      return canvas.toDataURL('image/png');
+    }
+
+    function calcGrade(pct) {
+      if (pct >= 90) return { grade: 'A+', remark: 'Outstanding' };
+      if (pct >= 80) return { grade: 'A', remark: 'Excellent' };
+      if (pct >= 70) return { grade: 'B+', remark: 'Very Good' };
+      if (pct >= 60) return { grade: 'B', remark: 'Good' };
+      if (pct >= 50) return { grade: 'C', remark: 'Satisfactory' };
+      return { grade: 'D', remark: 'Needs Improvement' };
+    }
+
+    function getAttendanceStats() {
+      const total = erpState.students.length;
+      const present = erpState.students.filter(s => s.status === 'P').length;
+      const absent = erpState.students.filter(s => s.status === 'A').length;
+      const leave = erpState.students.filter(s => s.status === 'L').length;
+      const pct = total ? Math.round((present / total) * 100) : 0;
+      return { total, present, absent, leave, pct };
+    }
+
+    function getMarksTotals() {
+      let obtained = 0;
+      let max = 0;
+      erpState.marksStudent.subjects.forEach(s => {
+        obtained += (Number(s.f1) || 0) + (Number(s.f2) || 0) + (Number(s.f3) || 0);
+        max += s.max;
+      });
+      const pct = max ? Number(((obtained / max) * 100).toFixed(2)) : 0;
+      return { obtained, max, pct, ...calcGrade(pct) };
+    }
+
+    // =========================================================================
+    // 4. SLIDE RENDERERS (11 Interactive Slides)
+    // =========================================================================
+    function renderSlide0() {
+      const att = getAttendanceStats();
+      return `
+        <div class="slide-enter flex-1 flex flex-col justify-center">
+          <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-2xl p-6 sm:p-10 shadow-xl border border-slate-700">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold mb-5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Automated Live ERP Walkthrough · With Sound, Diary Image &amp; Auto-Messaging
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-3">
+              ABMT School ERP System
+            </h1>
+            <p class="text-base sm:text-xl text-slate-300 max-w-2xl mb-8">
+              Complete Digital School Management for <strong class="text-white">Abubakr Memorial Trust, Lolipora, Pattan</strong> — watch every form get typed, compiled into an all-subjects Class Diary picture, and sent automatically to class groups.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div class="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">01 · Admin / Principal End</div>
+                <div class="font-semibold text-base mb-1">Admissions, Fees &amp; Audit</div>
+                <p class="text-xs text-slate-300">Auto-typed student profiles, instant fee receipts, and one-click teacher verification.</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div class="text-sky-400 text-xs font-bold uppercase tracking-wider mb-1">02 · Teacher &amp; Class Group</div>
+                <div class="font-semibold text-base mb-1">All-Subjects Diary Picture</div>
+                <p class="text-xs text-slate-300">Auto-filled Classwork &amp; Homework compiled into one PNG image &amp; sent to the Class Group.</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div class="text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">03 · Parent &amp; Student End</div>
+                <div class="font-semibold text-base mb-1">Instant Messages &amp; Checks</div>
+                <p class="text-xs text-slate-300">Live inbox of auto-sent SMS/App alerts, homework checkboxes, and digital marks card.</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-4 pt-5 border-t border-white/10">
+              <div class="flex flex-wrap gap-4 text-xs text-slate-300">
+                <span><strong class="text-white">${erpState.students.length}</strong> Students</span>
+                <span>•</span>
+                <span><strong class="text-white">${att.pct}%</strong> Attendance</span>
+                <span>•</span>
+                <span><strong class="text-white">${erpState.academicLogs.length}</strong> Subjects Logged</span>
+              </div>
+              <div class="flex flex-wrap gap-2.5">
+                <button id="heroAutoPlayBtn" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition shadow-lg">
+                  ▶ Start Full Auto-Demo (With Sound)
+                </button>
+                <button type="button" data-goto="5" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/20 transition">
+                  Jump to Diary Image Broadcast →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide1() {
+      return `
+        <div class="slide-enter flex-1 flex flex-col justify-center">
+          <div class="mb-5">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 2 · System Architecture</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">How Every End Connects Automatically</h2>
+            <p class="text-sm text-slate-600 mt-1">Data entered once flows instantly across the entire school — compiling all subjects into one Class Diary image and triggering automatic parent alerts.</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <span class="px-2.5 py-1 rounded-md bg-sky-100 text-sky-800 text-xs font-bold">TEACHER PORTAL</span>
+                  <span class="text-xs text-slate-400">Input Layer</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-900 mb-2">Daily Classroom Entry</h3>
+                <ul class="space-y-2 text-sm text-slate-600">
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Mark Daily Attendance (P / A / L)</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Type Classwork Done &amp; Chapter</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Assign Homework &amp; Due Date</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Enter F1 / F2 / F3 Subject Marks</li>
+                </ul>
+              </div>
+              <button type="button" data-goto="4" class="mt-4 w-full py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold border border-sky-200 transition">
+                Jump to Teacher Demo →
+              </button>
+            </div>
+
+            <div class="bg-slate-900 text-white rounded-2xl p-5 border border-slate-700 shadow-lg flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">ABMT CENTRAL CORE</span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                </div>
+                <h3 class="font-bold text-lg mb-2">Admin &amp; Broadcast Engine</h3>
+                <p class="text-xs text-slate-300 mb-4">Compiles every teacher's daily log into a single Class Diary PNG picture and distributes via multi-channel broadcast.</p>
+                <div class="space-y-2 text-xs">
+                  <div class="bg-slate-800 rounded-lg p-2.5 flex justify-between">
+                    <span class="text-slate-300">Auto-Sync Latency</span>
+                    <span class="text-emerald-400 font-bold">Instant (Real-Time)</span>
+                  </div>
+                  <div class="bg-slate-800 rounded-lg p-2.5 flex justify-between">
+                    <span class="text-slate-300">Class Diary Format</span>
+                    <span class="text-white font-bold">Auto-Generated PNG</span>
+                  </div>
+                  <div class="bg-slate-800 rounded-lg p-2.5 flex justify-between">
+                    <span class="text-slate-300">Delivery Channels</span>
+                    <span class="text-emerald-400 font-bold">Group + App + SMS</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" data-goto="5" class="mt-4 w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+                Jump to Diary Image Broadcast →
+              </button>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <span class="px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 text-xs font-bold">PARENT / STUDENT</span>
+                  <span class="text-xs text-slate-400">Transparency Layer</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-900 mb-2">Instant Home Visibility</h3>
+                <ul class="space-y-2 text-sm text-slate-600">
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Receive All-Subjects Diary Picture</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Instant Absentee SMS Notification</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Check Off Completed Homework</li>
+                  <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✓</span> Download Marks Card &amp; Fee Receipt</li>
+                </ul>
+              </div>
+              <button type="button" data-goto="8" class="mt-4 w-full py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 transition">
+                Jump to Parent Portal →
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide2() {
+      const att = getAttendanceStats();
+      const paidCount = erpState.students.filter(s => s.feeStatus === 'Paid').length;
+      const studentRows = erpState.students.map(s => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-2 px-3 font-semibold text-slate-700">#${s.roll}</td>
+          <td class="py-2 px-3 font-medium text-slate-900">${s.name}</td>
+          <td class="py-2 px-3 text-slate-600">${s.className}</td>
+          <td class="py-2 px-3 text-slate-600">${s.parent}</td>
+          <td class="py-2 px-3">
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">Active</span>
+          </td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 3 · Admin / Principal End</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">Master Dashboard &amp; Live Student Admission</h2>
+            </div>
+            <button id="autoAddStudentBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+              ▶ Auto-Fill &amp; Send Welcome SMS
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500 font-medium">Enrolled Students (Class 7)</div>
+              <div class="text-2xl font-extrabold text-slate-900 mt-1">${erpState.students.length}</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500 font-medium">Active Faculty</div>
+              <div class="text-2xl font-extrabold text-slate-900 mt-1">${erpState.teachers.length}</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500 font-medium">Today's Attendance</div>
+              <div class="text-2xl font-extrabold text-emerald-600 mt-1">${att.pct}%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+              <div class="text-xs text-slate-500 font-medium">Fees Paid</div>
+              <div class="text-2xl font-extrabold text-sky-600 mt-1">${paidCount} / ${erpState.students.length}</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <div class="lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+              <h3 class="font-bold text-base text-slate-900 mb-3">Add New Student (Live Entry)</h3>
+              <form id="admissionForm" class="space-y-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Student Full Name</label>
+                  <input id="admName" type="text" placeholder="e.g., Hina Tariq Bhat" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500" required />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Class</label>
+                    <select id="admClass" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:border-emerald-500">
+                      <option value="Class 7" selected>Class 7</option>
+                      <option value="Class 6">Class 6</option>
+                      <option value="Class 8">Class 8</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Roll No.</label>
+                    <input id="admRoll" type="text" value="0${erpState.students.length + 1}" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500" required />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Parent / Guardian Name</label>
+                  <input id="admParent" type="text" placeholder="e.g., Tariq Ahmad Bhat" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500" required />
+                </div>
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer pt-1">
+                  <input id="admVerify" type="checkbox" class="w-4 h-4 accent-emerald-600 rounded" />
+                  <span>Documents Verified &amp; Auto-Send Portal Login SMS</span>
+                </label>
+                <button type="submit" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition shadow-sm">
+                  + Save Student &amp; Send Welcome SMS
+                </button>
+              </form>
+            </div>
+
+            <div class="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-base text-slate-900">Live Student Directory</h3>
+                <span class="text-xs text-slate-500">Auto-updates Attendance &amp; Fee Modules</span>
+              </div>
+              <div class="overflow-x-auto flex-1">
+                <table class="w-full text-left text-xs sm:text-sm">
+                  <thead class="bg-slate-50 text-slate-500 uppercase text-[11px]">
+                    <tr>
+                      <th class="py-2 px-3">Roll</th>
+                      <th class="py-2 px-3">Student Name</th>
+                      <th class="py-2 px-3">Class</th>
+                      <th class="py-2 px-3">Parent</th>
+                      <th class="py-2 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>${studentRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide3() {
+      const att = getAttendanceStats();
+      const absentStudents = erpState.students.filter(s => s.status === 'A');
+      const rows = erpState.students.map(s => `
+        <div class="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
+              ${s.roll}
+            </div>
+            <div>
+              <div class="font-semibold text-sm text-slate-900">${s.name}</div>
+              <div class="text-xs text-slate-500">${s.className} · Parent: ${s.parent}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" data-att-id="${s.id}" data-att-val="P" class="px-3 py-1.5 rounded-lg text-xs font-bold border transition ${s.status === 'P' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+              ✓ Present
+            </button>
+            <button type="button" data-att-id="${s.id}" data-att-val="A" class="px-3 py-1.5 rounded-lg text-xs font-bold border transition ${s.status === 'A' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+              ✕ Absent
+            </button>
+            <button type="button" data-att-id="${s.id}" data-att-val="L" class="px-3 py-1.5 rounded-lg text-xs font-bold border transition ${s.status === 'L' ? 'bg-amber-500 text-white border-amber-500 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}">
+              ● Leave
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-sky-600">Slide 4 · Teacher End</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">Interactive Daily Attendance &amp; Auto-SMS Alerts</h2>
+            </div>
+            <div class="flex gap-2">
+              <button id="autoAttBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm">
+                ▶ Auto-Mark &amp; Send SMS
+              </button>
+              <button id="markAllPresentBtn" type="button" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm">
+                ✓ All Present
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <div class="lg:col-span-8 space-y-2.5">
+              ${rows}
+            </div>
+
+            <div class="lg:col-span-4 flex flex-col gap-4">
+              <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-sm text-slate-900 mb-3">Live Attendance Summary</h3>
+                <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                  <div class="bg-emerald-50 rounded-xl p-2.5 border border-emerald-100">
+                    <div class="text-xl font-extrabold text-emerald-700">${att.present}</div>
+                    <div class="text-[11px] font-semibold text-emerald-600">Present</div>
+                  </div>
+                  <div class="bg-rose-50 rounded-xl p-2.5 border border-rose-100">
+                    <div class="text-xl font-extrabold text-rose-700">${att.absent}</div>
+                    <div class="text-[11px] font-semibold text-rose-600">Absent</div>
+                  </div>
+                  <div class="bg-amber-50 rounded-xl p-2.5 border border-amber-100">
+                    <div class="text-xl font-extrabold text-amber-700">${att.leave}</div>
+                    <div class="text-[11px] font-semibold text-amber-600">Leave</div>
+                  </div>
+                </div>
+                <div class="text-xs text-slate-600 flex justify-between font-medium">
+                  <span>Attendance Rate</span>
+                  <span class="font-bold text-slate-900">${att.pct}%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                  <div class="h-full bg-emerald-500 transition-all duration-300" style="width: ${att.pct}%;"></div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 text-white rounded-2xl p-5 border border-slate-700 shadow-sm flex-1">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold uppercase tracking-wider text-rose-400">Auto-Sent Parent SMS</span>
+                  <span class="text-[11px] text-emerald-400 font-semibold">● Live Gateway</span>
+                </div>
+                ${absentStudents.length === 0
+                  ? `<p class="text-xs text-emerald-300 mt-3">✓ Zero absentees right now. Click <strong>▶ Auto-Mark &amp; Send SMS</strong> or mark any student Absent to dispatch an instant alert.</p>`
+                  : absentStudents.map(s => `
+                    <div class="mt-2.5 p-3 rounded-xl bg-slate-800 border border-slate-700 text-xs">
+                      <div class="flex justify-between font-bold text-white mb-1">
+                        <span>To: ${s.parent}</span>
+                        <span class="text-emerald-400 text-[10px]">✓ SENT</span>
+                      </div>
+                      <p class="text-slate-300 leading-relaxed">"Assalamu Alaikum. Your ward <strong>${s.name}</strong> (${s.className}) is marked <strong>ABSENT</strong> today (17 Nov 2026) at Abubakr Memorial Trust."</p>
+                    </div>
+                  `).join('')
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide4() {
+      const logsHtml = erpState.academicLogs.map(log => `
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-1.5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">${log.className} · ${log.subject}</span>
+            <span class="text-[11px] text-slate-500 font-medium">${log.timestamp} · ✓ Published</span>
+          </div>
+          <div class="text-xs font-bold text-slate-800">${log.chapter}</div>
+          <div class="text-xs text-slate-600"><strong class="text-slate-800">Classwork Done:</strong> ${log.classwork}</div>
+          <div class="text-xs text-slate-600"><strong class="text-slate-800">Homework Given:</strong> ${log.homework} <span class="text-amber-700 font-semibold">(Due: ${log.dueDate})</span></div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-sky-600">Slide 5 · Teacher End</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">Classwork Done &amp; Homework Given — Live Typing</h2>
+            </div>
+            <button id="autoTypeCwHwBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition">
+              ▶ Auto-Type CW/HW &amp; Publish
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <div class="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+              <form id="cwHwForm" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Class</label>
+                    <select id="cwClass" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+                      <option value="Class 7" selected>Class 7</option>
+                      <option value="Class 6">Class 6</option>
+                      <option value="Class 8">Class 8</option>
+                      <option value="Class 5">Class 5</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
+                    <select id="cwSubject" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white">
+                      <option value="Mathematics">Mathematics</option>
+                      <option value="Science">Science</option>
+                      <option value="English">English</option>
+                      <option value="Computer Science">Computer Science</option>
+                      <option value="Urdu">Urdu</option>
+                      <option value="Kashmiri">Kashmiri</option>
+                      <option value="Islamic Studies">Islamic Studies</option>
+                      <option value="Arabic">Arabic</option>
+                      <option value="Alquran">Alquran</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Due Date</label>
+                    <input id="hwDue" type="date" value="2026-11-18" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Chapter / Unit Title</label>
+                  <input id="cwChapter" type="text" placeholder="Type chapter name..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500" required />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Classwork Done Today</label>
+                  <textarea id="cwDetails" rows="2" placeholder="Type exact topics taught in class today..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500" required></textarea>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Homework Given</label>
+                  <textarea id="hwDetails" rows="2" placeholder="Type homework questions, page numbers, or instructions..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500" required></textarea>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                    <input id="cwCompletedCheck" type="checkbox" class="w-4 h-4 accent-emerald-600 rounded" />
+                    <span>Mark Topic as Completed &amp; Add to All-Subjects Diary</span>
+                  </label>
+                  <button type="submit" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm transition">
+                    Save &amp; Publish Log
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-sm text-slate-900">Published Daily Logs (${erpState.academicLogs.length})</h3>
+                <span class="text-[11px] font-semibold text-emerald-600">Auto-Compiles on Next Slide</span>
+              </div>
+              <div class="space-y-3 overflow-y-auto max-h-80 pr-1">
+                ${logsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // NEW SLIDE 6: ALL-SUBJECTS CONSOLIDATED DIARY + MULTIPLE-CHOICE SEND + REAL IMAGE TO CLASS GROUP
+    function renderSlide5Diary() {
+      const cls = erpState.selectedDiaryClass;
+      const classLogs = erpState.academicLogs.filter(l => l.className === cls);
+      const opts = erpState.diarySendOptions;
+
+      const tableRows = classLogs.map(log => `
+        <tr class="border-b border-slate-100 hover:bg-slate-50">
+          <td class="py-2 px-2.5 font-bold text-emerald-700 text-xs whitespace-nowrap">${log.subject}</td>
+          <td class="py-2 px-2.5 text-xs text-slate-700">${log.classwork}</td>
+          <td class="py-2 px-2.5 text-xs text-slate-800 font-medium">${log.homework}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 6 · All-Subjects Daily Diary &amp; Class Group Image</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">All Subjects CW/HW in One Place → Send Picture to Class Group</h2>
+            </div>
+            <button id="autoSendDiaryBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition">
+              ▶ Auto-Select &amp; Send Diary Picture
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <!-- Left: Consolidated All-Subjects Table + Multiple-Choice Send Options -->
+            <div class="lg:col-span-7 flex flex-col gap-4">
+              <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between gap-2 mb-2.5">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 text-xs font-extrabold">${cls}</span>
+                    <span class="text-xs font-semibold text-slate-600">All ${classLogs.length} Subjects · 17 Nov 2026</span>
+                  </div>
+                  <span class="text-[11px] font-semibold text-emerald-600">✓ Compiled Automatically</span>
+                </div>
+                <div class="overflow-x-auto max-h-52 overflow-y-auto">
+                  <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-[10px] uppercase text-slate-500 sticky top-0">
+                      <tr>
+                        <th class="py-2 px-2.5">Subject</th>
+                        <th class="py-2 px-2.5">Classwork Done</th>
+                        <th class="py-2 px-2.5">Homework Given</th>
+                      </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Multiple-Choice Send Options -->
+              <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500 mb-2.5">Multiple-Choice Delivery Channels</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3.5">
+                  <label class="flex items-center gap-2.5 p-2.5 rounded-xl border ${opts.whatsappGroupImg ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200'} cursor-pointer text-xs font-semibold text-slate-800">
+                    <input type="checkbox" data-diary-opt="whatsappGroupImg" ${opts.whatsappGroupImg ? 'checked' : ''} class="w-4 h-4 accent-emerald-600 rounded" />
+                    <span>📸 ${cls} WhatsApp / Broadcast Group (as Picture)</span>
+                  </label>
+                  <label class="flex items-center gap-2.5 p-2.5 rounded-xl border ${opts.parentApp ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200'} cursor-pointer text-xs font-semibold text-slate-800">
+                    <input type="checkbox" data-diary-opt="parentApp" ${opts.parentApp ? 'checked' : ''} class="w-4 h-4 accent-emerald-600 rounded" />
+                    <span>📱 ABMT Parent App Push Notification</span>
+                  </label>
+                  <label class="flex items-center gap-2.5 p-2.5 rounded-xl border ${opts.smsAbsentee ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200'} cursor-pointer text-xs font-semibold text-slate-800">
+                    <input type="checkbox" data-diary-opt="smsAbsentee" ${opts.smsAbsentee ? 'checked' : ''} class="w-4 h-4 accent-emerald-600 rounded" />
+                    <span>✉ SMS Digest to Absentee Parents</span>
+                  </label>
+                  <label class="flex items-center gap-2.5 p-2.5 rounded-xl border ${opts.principalArchive ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200'} cursor-pointer text-xs font-semibold text-slate-800">
+                    <input type="checkbox" data-diary-opt="principalArchive" ${opts.principalArchive ? 'checked' : ''} class="w-4 h-4 accent-emerald-600 rounded" />
+                    <span>🏛 Save Copy to Principal Daily Archive</span>
+                  </label>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <button id="sendDiaryNowBtn" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-sm transition">
+                    📸 Generate Picture &amp; Send to ${cls} Group
+                  </button>
+                  ${erpState.sentDiaryImageUrl ? `
+                    <a href="${erpState.sentDiaryImageUrl}" download="ABMT_${cls.replace(' ', '_')}_Daily_Diary.png" class="py-2.5 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 transition">
+                      ⬇ Download PNG
+                    </a>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Live Class Group Chat Preview Showing the Sent Picture -->
+            <div class="lg:col-span-5 bg-[#0b141a] rounded-3xl p-4 border-4 border-slate-800 shadow-xl text-white flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-extrabold text-xs">C7</div>
+                    <div>
+                      <div class="text-xs font-bold text-white">ABMT ${cls} Parents Group</div>
+                      <div class="text-[10px] text-emerald-400">32 Parents · Official Broadcast</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">LIVE GROUP</span>
+                </div>
+
+                ${erpState.sentDiaryImageUrl ? `
+                  <div class="bg-[#005c4b] rounded-2xl rounded-tr-sm p-2.5 shadow-md space-y-2">
+                    <div class="rounded-xl overflow-hidden border border-emerald-400/30 bg-white">
+                      <img src="${erpState.sentDiaryImageUrl}" alt="ABMT Daily Diary Picture" class="w-full h-auto block" />
+                    </div>
+                    <div class="text-[11px] text-emerald-50 leading-snug">
+                      <strong>📸 Today's Complete ${cls} Classwork &amp; Homework (${classLogs.length} Subjects)</strong><br/>
+                      Sent via: ${erpState.sentDiaryMeta.channels.join(', ')}
+                    </div>
+                    <div class="flex items-center justify-end gap-1 text-[10px] text-emerald-200">
+                      <span>${erpState.sentDiaryMeta.time}</span>
+                      <span class="text-sky-300 font-bold">✓✓ Delivered</span>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="py-12 px-4 text-center border border-dashed border-slate-700 rounded-2xl bg-slate-900/50">
+                    <div class="text-2xl mb-2">📸</div>
+                    <div class="text-xs font-bold text-slate-200 mb-1">Ready to Broadcast ${cls} Diary Picture</div>
+                    <p class="text-[11px] text-slate-400">Click <strong>Generate Picture &amp; Send to ${cls} Group</strong> to render all ${classLogs.length} subjects into a crisp PNG card and deliver it directly here.</p>
+                  </div>
+                `}
+              </div>
+
+              <div class="mt-3 pt-2.5 border-t border-slate-800 text-center text-[10px] text-slate-400">
+                Real PNG image generated in-browser by ABMT ERP
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide6Exams() {
+      const totals = getMarksTotals();
+      const rows = erpState.marksStudent.subjects.map((sub, idx) => {
+        const sum = (Number(sub.f1) || 0) + (Number(sub.f2) || 0) + (Number(sub.f3) || 0);
+        return `
+          <tr class="border-b border-slate-100">
+            <td class="py-1.5 px-2 font-medium text-slate-800 text-xs">${sub.name}</td>
+            <td class="py-1 px-1"><input id="m-${idx}-f1" type="number" min="0" max="30" data-mark-idx="${idx}" data-mark-field="f1" value="${sub.f1}" class="w-14 px-2 py-1 text-xs border border-slate-300 rounded text-center font-semibold focus:border-emerald-500 focus:outline-none" /></td>
+            <td class="py-1 px-1"><input id="m-${idx}-f2" type="number" min="0" max="30" data-mark-idx="${idx}" data-mark-field="f2" value="${sub.f2}" class="w-14 px-2 py-1 text-xs border border-slate-300 rounded text-center font-semibold focus:border-emerald-500 focus:outline-none" /></td>
+            <td class="py-1 px-1"><input id="m-${idx}-f3" type="number" min="0" max="40" data-mark-idx="${idx}" data-mark-field="f3" value="${sub.f3}" class="w-14 px-2 py-1 text-xs border border-slate-300 rounded text-center font-semibold focus:border-emerald-500 focus:outline-none" /></td>
+            <td class="py-1.5 px-2 text-right font-bold text-xs text-slate-900">${sum} / ${sub.max}</td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 7 · Examination &amp; Results</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">Live Marks Entry (F1 / F2 / F3) &amp; Digital Marks Card</h2>
+            </div>
+            <button id="demoMarksBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm">
+              ▶ Auto-Type Marks &amp; Publish Result
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <div class="lg:col-span-7 bg-white rounded-2xl p-4 border border-slate-200 shadow-sm overflow-x-auto">
+              <div class="text-xs text-slate-500 mb-2">Type any number in F1 (max 30), F2 (max 30), or F3 (max 40) to watch the Marks Card recalculate live:</div>
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 text-[11px] uppercase text-slate-500">
+                  <tr>
+                    <th class="py-2 px-2">Subject</th>
+                    <th class="py-2 px-1 text-center">F1 (30)</th>
+                    <th class="py-2 px-1 text-center">F2 (30)</th>
+                    <th class="py-2 px-1 text-center">F3 (40)</th>
+                    <th class="py-2 px-2 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+
+            <div class="lg:col-span-5 bg-white rounded-2xl p-5 border-2 border-emerald-600/30 shadow-md flex flex-col justify-between">
+              <div>
+                <div class="text-center border-b border-slate-200 pb-3 mb-4">
+                  <div class="text-xs font-extrabold uppercase tracking-widest text-emerald-700">Abubakr Memorial Trust</div>
+                  <div class="text-[11px] text-slate-500">Lolipora, Pattan · Digital Marks Card (${erpState.marksStudent.session})</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div><span class="text-slate-500">Student:</span> <strong class="text-slate-900">${erpState.marksStudent.name}</strong></div>
+                  <div><span class="text-slate-500">Roll No:</span> <strong class="text-slate-900">${erpState.marksStudent.roll}</strong></div>
+                  <div><span class="text-slate-500">Class:</span> <strong class="text-slate-900">${erpState.marksStudent.className}</strong></div>
+                  <div><span class="text-slate-500">Status:</span> <strong class="text-emerald-700">Promoted to 8th</strong></div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2.5 text-center mb-4">
+                  <div class="bg-slate-900 text-white rounded-xl p-3">
+                    <div class="text-[10px] uppercase text-slate-400">Grand Total</div>
+                    <div id="mcTotal" class="text-lg font-extrabold mt-0.5">${totals.obtained}/${totals.max}</div>
+                  </div>
+                  <div class="bg-emerald-600 text-white rounded-xl p-3">
+                    <div class="text-[10px] uppercase text-emerald-100">Percentage</div>
+                    <div id="mcPct" class="text-lg font-extrabold mt-0.5">${totals.pct}%</div>
+                  </div>
+                  <div class="bg-amber-500 text-white rounded-xl p-3">
+                    <div class="text-[10px] uppercase text-amber-100">Grade</div>
+                    <div id="mcGrade" class="text-lg font-extrabold mt-0.5">${totals.grade}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center text-xs text-slate-500 pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span>Remark: <strong id="mcRemark" class="text-slate-800">${totals.remark}</strong></span>
+                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[11px]">✓ Verified Digital Copy</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide7Fees() {
+      const totalCollected = erpState.students.filter(s => s.feeStatus === 'Paid').reduce((a, b) => a + b.feeAmount, 0);
+      const totalPending = erpState.students.filter(s => s.feeStatus !== 'Paid').reduce((a, b) => a + b.feeAmount, 0);
+
+      const rows = erpState.students.map(s => `
+        <tr class="border-b border-slate-100">
+          <td class="py-2.5 px-3 font-medium text-slate-900 text-xs sm:text-sm">${s.name} <span class="text-slate-400 text-xs">(#${s.roll})</span></td>
+          <td class="py-2.5 px-3 text-xs sm:text-sm font-semibold text-slate-700">₹${s.feeAmount.toLocaleString('en-IN')}</td>
+          <td class="py-2.5 px-3">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${s.feeStatus === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+              ${s.feeStatus}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-right">
+            ${s.feeStatus === 'Paid'
+              ? `<button type="button" data-view-receipt="${s.id}" class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">View Receipt</button>`
+              : `<button type="button" data-pay-fee="${s.id}" class="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm">✓ Collect Fee</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+
+      const receipt = erpState.lastReceipt || erpState.students.find(s => s.feeStatus === 'Paid');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 8 · Admin End</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">Fee Management &amp; Auto-Sent Digital Receipts</h2>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+              <button id="autoFeeBtn" type="button" class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm">▶ Auto-Collect Fee</button>
+              <span class="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800">Collected: ₹${totalCollected.toLocaleString('en-IN')}</span>
+              <span class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800">Pending: ₹${totalPending.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <div class="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm overflow-x-auto">
+              <h3 class="font-bold text-sm text-slate-900 mb-3">Monthly Tuition Ledger (Nov 2026)</h3>
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 text-[11px] uppercase text-slate-500">
+                  <tr>
+                    <th class="py-2 px-3">Student</th>
+                    <th class="py-2 px-3">Amount</th>
+                    <th class="py-2 px-3">Status</th>
+                    <th class="py-2 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+
+            <div class="lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+              ${receipt ? `
+                <div>
+                  <div class="flex items-center justify-between border-b border-dashed border-slate-300 pb-3 mb-4">
+                    <div>
+                      <div class="font-extrabold text-sm text-slate-900">ABMT FEE RECEIPT</div>
+                      <div class="text-[11px] text-slate-500">Abubakr Memorial Trust, Lolipora</div>
+                    </div>
+                    <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700 text-[11px] font-bold">PAID ✓</span>
+                  </div>
+                  <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-slate-500">Receipt No:</span><strong class="text-slate-900">${receipt.receiptNo || 'ABMT-2026-NEW'}</strong></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Student Name:</span><strong class="text-slate-900">${receipt.name}</strong></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Class / Roll:</span><strong class="text-slate-900">${receipt.className} (#${receipt.roll})</strong></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Guardian:</span><strong class="text-slate-900">${receipt.parent}</strong></div>
+                    <div class="flex justify-between pt-2 border-t border-slate-100 text-sm"><span class="font-semibold text-slate-700">Amount Paid:</span><strong class="text-emerald-700">₹${receipt.feeAmount.toLocaleString('en-IN')}</strong></div>
+                  </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-emerald-700 font-semibold flex justify-between">
+                  <span>Date: 17 Nov 2026</span>
+                  <span>✓ Receipt Auto-Sent via SMS/App</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide8Parent() {
+      const student = erpState.students[0];
+      const totals = getMarksTotals();
+      const hwCards = erpState.academicLogs.map(log => `
+        <div class="p-3 rounded-xl border ${log.parentChecked ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-white'} transition">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <span class="text-[11px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded">${log.subject}</span>
+            <span class="text-[11px] text-slate-500">Due: ${log.dueDate}</span>
+          </div>
+          <div class="text-xs text-slate-700 mb-1"><strong>Classwork:</strong> ${log.classwork}</div>
+          <div class="text-xs text-slate-700 mb-2"><strong>Homework:</strong> ${log.homework}</div>
+          <label class="inline-flex items-center gap-2 text-xs font-bold cursor-pointer ${log.parentChecked ? 'text-emerald-700' : 'text-slate-700'}">
+            <input type="checkbox" data-parent-hw="${log.id}" ${log.parentChecked ? 'checked' : ''} class="w-4 h-4 accent-emerald-600 rounded" />
+            <span>${log.parentChecked ? 'Homework Checked & Completed ✓' : 'Mark Homework as Completed'}</span>
+          </label>
+        </div>
+      `).join('');
+
+      const msgFeed = erpState.sentMessages.slice(0, 4).map(m => `
+        <div class="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-[11px]">
+          <div class="flex justify-between text-emerald-400 font-bold mb-0.5">
+            <span>✉ ${m.channel} · ${m.to}</span>
+            <span class="text-slate-400 font-normal">${m.time}</span>
+          </div>
+          <div class="text-slate-200 leading-snug">${m.text}</div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-600">Slide 9 · Student &amp; Parent End</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">Real-Time Parent Portal &amp; Auto-Received Messages</h2>
+            </div>
+            <button id="autoParentCheckBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm">
+              ▶ Auto-Check Homework
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+            <div class="lg:col-span-5 bg-slate-900 rounded-3xl p-4 shadow-xl border-4 border-slate-800 text-white flex flex-col justify-between">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                  <span>ABMT Parent App</span>
+                  <span class="text-emerald-400 font-semibold">● ${erpState.sentMessages.length} Messages</span>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-3.5 flex items-center justify-between">
+                  <div>
+                    <div class="text-sm font-bold text-white">${student.name}</div>
+                    <div class="text-[11px] text-emerald-400">${student.className} · Roll #${student.roll}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs font-extrabold text-emerald-300">${totals.pct}% (${totals.grade})</div>
+                    <div class="text-[10px] text-slate-400">Attendance: ${student.status === 'P' ? 'Present' : student.status === 'A' ? 'Absent' : 'Leave'}</div>
+                  </div>
+                </div>
+                ${erpState.sentDiaryImageUrl ? `
+                  <div class="p-2 rounded-xl bg-emerald-950/80 border border-emerald-500/40">
+                    <div class="text-[10px] font-bold text-emerald-300 mb-1">📸 Received Today's All-Subjects Diary Picture</div>
+                    <img src="${erpState.sentDiaryImageUrl}" alt="Diary Picture" class="w-full h-24 object-cover object-top rounded-lg border border-white/10" />
+                  </div>
+                ` : ''}
+                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  ${msgFeed}
+                </div>
+              </div>
+              <div class="mt-3 text-center text-[10px] text-slate-400">All alerts delivered automatically from ABMT ERP</div>
+            </div>
+
+            <div class="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-base text-slate-900">Today's Classwork &amp; Homework Tracker</h3>
+                <span class="text-xs font-semibold text-emerald-600">${erpState.academicLogs.filter(l => l.parentChecked).length} / ${erpState.academicLogs.length} Done</span>
+              </div>
+              <div class="space-y-3 overflow-y-auto max-h-80 pr-1">
+                ${hwCards}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide9Audit() {
+      const teacherRows = erpState.teachers.map(t => `
+        <tr class="border-b border-slate-100">
+          <td class="py-2.5 px-3 font-semibold text-slate-900 text-xs sm:text-sm">${t.name}</td>
+          <td class="py-2.5 px-3 text-xs text-slate-600">${t.subject} (${t.assignedClass})</td>
+          <td class="py-2.5 px-3 text-center">${t.attendanceDone ? '<span class="text-emerald-600 font-bold">✓</span>' : '<span class="text-amber-500 font-bold">Pending</span>'}</td>
+          <td class="py-2.5 px-3 text-center">${t.cwDone ? '<span class="text-emerald-600 font-bold">✓</span>' : '<span class="text-amber-500 font-bold">Pending</span>'}</td>
+          <td class="py-2.5 px-3 text-center">${t.hwDone ? '<span class="text-emerald-600 font-bold">✓</span>' : '<span class="text-amber-500 font-bold">Pending</span>'}</td>
+          <td class="py-2.5 px-3 text-right">
+            <button type="button" data-verify-teacher="${t.id}" class="px-3 py-1 rounded-md text-xs font-bold transition ${t.verified ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-900 hover:bg-slate-800 text-white'}">
+              ${t.verified ? '✓ Verified' : 'Check & Verify'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="slide-enter flex-1 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 10 · Principal Verification</span>
+              <h2 class="text-2xl font-extrabold text-slate-900">One-Screen Daily Audit &amp; Compliance Check</h2>
+            </div>
+            <button id="verifyAllBtn" type="button" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition">
+              ✓ Verify All Pending Logs
+            </button>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm overflow-x-auto flex-1">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 text-[11px] uppercase text-slate-500">
+                <tr>
+                  <th class="py-2.5 px-3">Teacher</th>
+                  <th class="py-2.5 px-3">Subject &amp; Class</th>
+                  <th class="py-2.5 px-3 text-center">Attendance</th>
+                  <th class="py-2.5 px-3 text-center">Classwork</th>
+                  <th class="py-2.5 px-3 text-center">Homework</th>
+                  <th class="py-2.5 px-3 text-right">Principal Sign-Off</th>
+                </tr>
+              </thead>
+              <tbody>${teacherRows}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSlide10Closing() {
+      const att = getAttendanceStats();
+      const verifiedTeachers = erpState.teachers.filter(t => t.verified).length;
+      return `
+        <div class="slide-enter flex-1 flex flex-col justify-center">
+          <div class="bg-white rounded-2xl p-6 sm:p-10 border border-slate-200 shadow-lg">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Slide 11 · Closing Summary</span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-1 mb-3">
+              Why ABMT School ERP Transforms Daily Operations
+            </h2>
+            <p class="text-sm sm:text-base text-slate-600 max-w-2xl mb-6">
+              Built specifically for Abubakr Memorial Trust, Lolipora, Pattan — uniting administration, teachers, students, and parents on one transparent platform.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+                <div class="font-bold text-emerald-900 text-sm mb-1">All-Subjects Diary Image</div>
+                <p class="text-xs text-emerald-800/80">Compiles every subject's CW &amp; HW into one crisp PNG picture sent straight to the Class Group.</p>
+              </div>
+              <div class="p-4 rounded-xl bg-sky-50 border border-sky-100">
+                <div class="font-bold text-sky-900 text-sm mb-1">Zero Manual Errors</div>
+                <p class="text-xs text-sky-800/80">F1–F3 totals, percentages, grades, and fee receipts calculate automatically.</p>
+              </div>
+              <div class="p-4 rounded-xl bg-amber-50 border border-amber-100">
+                <div class="font-bold text-amber-900 text-sm mb-1">Instant Oversight</div>
+                <p class="text-xs text-amber-800/80">Principal verifies every teacher's daily academic log from one screen.</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-100 border border-slate-200">
+                <div class="font-bold text-slate-900 text-sm mb-1">100% Transparency</div>
+                <p class="text-xs text-slate-600">Parents receive automatic SMS &amp; app alerts for attendance, homework, and fees.</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 text-white rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+              <div class="text-xs sm:text-sm text-slate-300">
+                Live Session: <strong class="text-white">${erpState.students.length} Students</strong> · <strong class="text-emerald-400">${att.pct}% Attendance</strong> · <strong class="text-white">${erpState.academicLogs.length} Subjects</strong> · <strong class="text-sky-400">${erpState.sentMessages.length} Auto-Messages</strong> · <strong class="text-emerald-400">${verifiedTeachers}/${erpState.teachers.length} Verified</strong>
+              </div>
+              <button type="button" data-goto="0" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition">
+                ↺ Replay Presentation
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const slideRenderers = [
+      renderSlide0, renderSlide1, renderSlide2, renderSlide3, renderSlide4,
+      renderSlide5Diary, renderSlide6Exams, renderSlide7Fees, renderSlide8Parent,
+      renderSlide9Audit, renderSlide10Closing
+    ];
+
+    // =========================================================================
+    // 5. PER-SLIDE AUTOMATED DEMO RUNNERS (Typing Sound + Auto-Messaging)
+    // =========================================================================
+    function executeDiaryBroadcast() {
+      const cls = erpState.selectedDiaryClass;
+      const opts = erpState.diarySendOptions;
+      const channels = [];
+      if (opts.whatsappGroupImg) channels.push(`${cls} Group (PNG Picture)`);
+      if (opts.parentApp) channels.push('Parent App');
+      if (opts.smsAbsentee) channels.push('Absentee SMS');
+      if (opts.principalArchive) channels.push('Principal Archive');
+      if (channels.length === 0) {
+        showToast('Select at least one delivery channel first!', 'info');
+        return;
+      }
+
+      erpState.sentDiaryImageUrl = generateDailyDiaryImage(cls);
+      erpState.sentDiaryMeta = { channels, time: 'Just now' };
+      erpState.liveActionsCount++;
+      sendAutoMessage(`${cls} Parents Group`, 'Diary Picture', `📸 Sent complete ${cls} Classwork & Homework PNG image (${erpState.academicLogs.filter(l => l.className === cls).length} subjects) via ${channels.join(', ')}.`);
+      renderCurrentSlide();
+    }
+
+    async function runSlide2Demo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 3/11 · Admin End: Typing new student admission details & sending Welcome SMS...');
+      if (!(await sleep(1600, runId))) return false;
+      if (!(await typeIntoInput(document.getElementById('admName'), 'Hina Tariq Bhat', 110, runId, 'Entering Student Name'))) return false;
+      if (!(await sleep(900, runId))) return false;
+      if (!(await typeIntoInput(document.getElementById('admParent'), 'Tariq Ahmad Bhat', 110, runId, 'Entering Parent Name'))) return false;
+      if (!(await sleep(900, runId))) return false;
+      const cb = document.getElementById('admVerify');
+      if (cb) {
+        if (!(await pointAtElement(cb, 'Checking Verification Box', runId))) return false;
+        cb.checked = true;
+        cb.classList.remove('auto-highlight');
+        soundEngine.playCheckClick();
+        hidePointer();
+      }
+      if (!(await sleep(1000, runId))) return false;
+      const form = document.getElementById('admissionForm');
+      const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+      if (submitBtn) {
+        if (!(await pointAtElement(submitBtn, 'Saving & Sending Welcome SMS', runId))) return false;
+        submitBtn.classList.remove('auto-highlight');
+        hidePointer();
+      }
+      if (!erpState.students.some(st => st.name === 'Hina Tariq Bhat')) {
+        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      } else {
+        showToast('Hina Tariq Bhat already saved in ERP!', 'info');
+      }
+      return await autoPanSlide(runId, 1600, 3200);
+    }
+
+    async function runSlide3Demo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 4/11 · Teacher End: Marking attendance & dispatching automatic Absentee SMS...');
+      if (!(await sleep(2200, runId))) return false;
+      const target = erpState.students.find(s => s.roll === '03') || erpState.students[0];
+      if (target) {
+        const absBtn = document.querySelector(`[data-att-id="${target.id}"][data-att-val="A"]`);
+        if (absBtn) {
+          if (!(await pointAtElement(absBtn, 'Marking Bilal Absent', runId))) return false;
+          absBtn.classList.remove('auto-highlight');
+          hidePointer();
+        }
+        target.status = 'A';
+        erpState.liveActionsCount++;
+        soundEngine.playCheckClick();
+        renderCurrentSlide();
+        sendAutoMessage(target.parent, 'SMS', `Assalamu Alaikum. Your ward ${target.name} (${target.className}) is marked ABSENT today at ABMT.`);
+      }
+      return await autoPanSlide(runId, 1800, 3400);
+    }
+
+    async function runSlide4Demo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 5/11 · Teacher End: Typing Classwork Done & Homework Given with live sync...');
+      if (!(await sleep(1500, runId))) return false;
+      const cls = document.getElementById('cwClass');
+      const sub = document.getElementById('cwSubject');
+      if (cls) cls.value = 'Class 7';
+      if (sub) sub.value = 'Mathematics';
+      if (!(await typeIntoInput(document.getElementById('cwChapter'), 'Ch. 8: Comparing Quantities & Percentages', 95, runId, 'Entering Chapter Name'))) return false;
+      if (!(await sleep(800, runId))) return false;
+      if (!(await typeIntoInput(document.getElementById('cwDetails'), 'Solved Exercise 8.2 Q1 to Q4 on board; explained profit & loss percentage formula.', 80, runId, 'Typing Classwork Done'))) return false;
+      if (!(await sleep(800, runId))) return false;
+      if (!(await typeIntoInput(document.getElementById('hwDetails'), 'Complete Exercise 8.2 Q5, Q6, and Q7 in your fair notebook.', 85, runId, 'Typing Homework Given'))) return false;
+      if (!(await sleep(900, runId))) return false;
+      const cb = document.getElementById('cwCompletedCheck');
+      if (cb) {
+        if (!(await pointAtElement(cb, 'Checking Topic Completed', runId))) return false;
+        cb.checked = true;
+        cb.classList.remove('auto-highlight');
+        soundEngine.playCheckClick();
+        hidePointer();
+      }
+      if (!(await sleep(1000, runId))) return false;
+      const form = document.getElementById('cwHwForm');
+      const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+      if (submitBtn) {
+        if (!(await pointAtElement(submitBtn, 'Publishing Daily Log', runId))) return false;
+        submitBtn.classList.remove('auto-highlight');
+        hidePointer();
+      }
+      if (!erpState.academicLogs.some(l => l.chapter.includes('Comparing Quantities'))) {
+        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      } else {
+        showToast('Mathematics CW/HW log already published!', 'info');
+      }
+      return await autoPanSlide(runId, 1800, 3200);
+    }
+
+    async function runSlide5DiaryDemo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 6/11 · Class Broadcast: Selecting multi-channel options & sending All-Subjects Diary PNG to Class 7 Group...');
+      if (!(await sleep(2400, runId))) return false;
+      erpState.diarySendOptions.whatsappGroupImg = true;
+      erpState.diarySendOptions.parentApp = true;
+      erpState.diarySendOptions.smsAbsentee = true;
+      soundEngine.playCheckClick();
+      renderCurrentSlide();
+      const sendBtn = document.getElementById('sendDiaryNowBtn');
+      if (sendBtn) {
+        if (!(await pointAtElement(sendBtn, 'Sending Diary Picture to Class Group', runId))) return false;
+        sendBtn.classList.remove('auto-highlight');
+        hidePointer();
+      }
+      executeDiaryBroadcast();
+      return await autoPanSlide(runId, 2000, 4400);
+    }
+
+    async function runSlide6ExamsDemo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 7/11 · Exams Module: Typing F3 marks & recalculating Digital Marks Card...');
+      if (!(await sleep(1800, runId))) return false;
+      const updates = [{ id: 'm-0-f3', val: '39' }, { id: 'm-1-f3', val: '40' }, { id: 'm-2-f3', val: '38' }];
+      for (const u of updates) {
+        const el = document.getElementById(u.id);
+        if (!(await typeIntoInput(el, u.val, 200, runId, 'Entering F3 Marks'))) return false;
+        if (!(await sleep(900, runId))) return false;
+      }
+      const totals = getMarksTotals();
+      sendAutoMessage(erpState.marksStudent.name + ' (Parent)', 'App Alert', `Digital Marks Card updated: ${totals.obtained}/${totals.max} (${totals.pct}% · Grade ${totals.grade}).`);
+      return await autoPanSlide(runId, 1800, 3400);
+    }
+
+    async function runSlide7FeesDemo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 8/11 · Admin End: Collecting pending fee & auto-sending Digital Receipt...');
+      if (!(await sleep(2200, runId))) return false;
+      const pending = erpState.students.find(s => s.feeStatus !== 'Paid');
+      if (pending) {
+        const payBtn = document.querySelector(`[data-pay-fee="${pending.id}"]`);
+        if (payBtn) {
+          if (!(await pointAtElement(payBtn, 'Collecting Fee & Generating Receipt', runId))) return false;
+          payBtn.classList.remove('auto-highlight');
+          hidePointer();
+        }
+        pending.feeStatus = 'Paid';
+        pending.receiptNo = 'ABMT-2026-' + Math.floor(200 + Math.random() * 799);
+        erpState.lastReceipt = pending;
+        erpState.liveActionsCount++;
+        soundEngine.playCheckClick();
+        renderCurrentSlide();
+        sendAutoMessage(pending.parent, 'SMS Receipt', `Fee of ₹${pending.feeAmount} received for ${pending.name}. Receipt #${pending.receiptNo}.`);
+      }
+      return await autoPanSlide(runId, 1800, 3400);
+    }
+
+    async function runSlide8ParentDemo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 9/11 · Parent Portal: Reviewing auto-received messages & checking off homework...');
+      if (!(await sleep(2400, runId))) return false;
+      const unchecked = erpState.academicLogs.find(l => !l.parentChecked);
+      if (unchecked) {
+        const hwCb = document.querySelector(`[data-parent-hw="${unchecked.id}"]`);
+        if (hwCb) {
+          if (!(await pointAtElement(hwCb, 'Parent Checking Homework Done', runId))) return false;
+          hwCb.classList.remove('auto-highlight');
+          hidePointer();
+        }
+        unchecked.parentChecked = true;
+        erpState.liveActionsCount++;
+        soundEngine.playCheckClick();
+        showToast(`Parent checked off ${unchecked.subject} homework as Completed!`);
+        renderCurrentSlide();
+      }
+      return await autoPanSlide(runId, 2000, 3500);
+    }
+
+    async function runSlide9AuditDemo(runId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setAutoBanner(true, 'Slide 10/11 · Principal End: Checking & verifying all teacher daily logs...');
+      if (!(await sleep(2200, runId))) return false;
+      const verBtn = document.getElementById('verifyAllBtn');
+      if (verBtn) {
+        if (!(await pointAtElement(verBtn, 'Principal Verifying All Logs', runId))) return false;
+        verBtn.classList.remove('auto-highlight');
+        hidePointer();
+      }
+      erpState.teachers.forEach(t => { t.attendanceDone = true; t.cwDone = true; t.hwDone = true; t.verified = true; });
+      erpState.liveActionsCount++;
+      soundEngine.playMessageSent();
+      showToast('All teacher daily logs verified by Principal!');
+      renderCurrentSlide();
+      return await autoPanSlide(runId, 1800, 3400);
+    }
+
+    async function startFullAutoDemo() {
+      soundEngine.init();
+      stopAllAutoDemos();
+      const runId = ++erpState.autoRunId;
+      erpState.isFullAutoPlaying = true;
+
+      const btn = document.getElementById('fullAutoDemoBtn');
+      btn.innerHTML = '⏹ Stop Auto-Demo';
+      btn.classList.remove('bg-emerald-500', 'hover:bg-emerald-400', 'text-slate-950');
+      btn.classList.add('bg-rose-500', 'hover:bg-rose-400', 'text-white');
+
+      for (let i = 0; i < slidesMeta.length; i++) {
+        if (runId !== erpState.autoRunId) return;
+        erpState.currentSlide = i;
+        renderCurrentSlide();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (i === 0) {
+          setAutoBanner(true, 'Slide 1/11: ABMT School ERP Overview...');
+          if (!(await autoPanSlide(runId, 2600, 3200))) return;
+        } else if (i === 1) {
+          setAutoBanner(true, 'Slide 2/11: System Architecture & Real-Time Flow...');
+          if (!(await autoPanSlide(runId, 2800, 3400))) return;
+        } else if (i === 2) {
+          if (!(await runSlide2Demo(runId))) return;
+        } else if (i === 3) {
+          if (!(await runSlide3Demo(runId))) return;
+        } else if (i === 4) {
+          if (!(await runSlide4Demo(runId))) return;
+        } else if (i === 5) {
+          if (!(await runSlide5DiaryDemo(runId))) return;
+        } else if (i === 6) {
+          if (!(await runSlide6ExamsDemo(runId))) return;
+        } else if (i === 7) {
+          if (!(await runSlide7FeesDemo(runId))) return;
+        } else if (i === 8) {
+          if (!(await runSlide8ParentDemo(runId))) return;
+        } else if (i === 9) {
+          if (!(await runSlide9AuditDemo(runId))) return;
+        } else if (i === 10) {
+          setAutoBanner(true, 'Full ABMT School ERP Demo Completed!');
+          soundEngine.playMessageSent();
+          await autoPanSlide(runId, 2800, 3800);
+        }
+      }
+      if (runId === erpState.autoRunId) stopAllAutoDemos();
+    }
+
+    // =========================================================================
+    // 6. RENDER & EVENT BINDING
+    // =========================================================================
+    function renderCurrentSlide() {
+      const idx = erpState.currentSlide;
+      const meta = slidesMeta[idx];
+
+      document.getElementById('slideCounter').textContent = `${idx + 1} / ${slidesMeta.length}`;
+      document.getElementById('roleBadge').textContent = meta.role;
+      const redEl = document.getElementById('redActionText');
+      if (redEl && meta.redCue) redEl.textContent = meta.redCue;
+      document.getElementById('progressBar').style.width = `${((idx + 1) / slidesMeta.length) * 100}%`;
+      document.getElementById('prevBtn').disabled = idx === 0;
+      document.getElementById('nextBtn').disabled = idx === slidesMeta.length - 1;
+
+      const stage = document.getElementById('slideStage');
+      stage.innerHTML = slideRenderers[idx]();
+
+      renderSlideMenu();
+      bindSlideEvents(idx);
+    }
+
+    function renderSlideMenu() {
+      const grid = document.getElementById('slideMenuGrid');
+      grid.innerHTML = slidesMeta.map((m, i) => `
+        <button type="button" data-menu-goto="${i}" class="text-left px-3 py-2 rounded-lg text-xs transition ${i === erpState.currentSlide ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-700/60 hover:bg-slate-700 text-slate-200'}">
+          <div class="text-[10px] opacity-75">Slide ${i + 1} · ${m.role}</div>
+          <div class="truncate">${m.title}</div>
+        </button>
+      `).join('');
+
+      grid.querySelectorAll('[data-menu-goto]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          stopAllAutoDemos();
+          erpState.currentSlide = Number(btn.dataset.menuGoto);
+          document.getElementById('slideMenu').classList.add('hidden');
+          renderCurrentSlide();
+        });
+      });
+    }
+
+    function bindSlideEvents(idx) {
+      document.querySelectorAll('[data-goto]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          stopAllAutoDemos();
+          erpState.currentSlide = Number(btn.dataset.goto);
+          renderCurrentSlide();
+        });
+      });
+
+      if (idx === 0) {
+        const heroBtn = document.getElementById('heroAutoPlayBtn');
+        if (heroBtn) heroBtn.addEventListener('click', () => startFullAutoDemo());
+      }
+
+      if (idx === 2) {
+        const form = document.getElementById('admissionForm');
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const name = document.getElementById('admName').value.trim();
+          const className = document.getElementById('admClass').value;
+          const roll = document.getElementById('admRoll').value.trim();
+          const parent = document.getElementById('admParent').value.trim();
+          if (!name || !parent) return;
+          erpState.students.push({
+            id: Date.now(),
+            roll: roll || String(erpState.students.length + 1).padStart(2, '0'),
+            name, className, parent,
+            phone: '+91 96821-XXXXX',
+            status: 'P',
+            feeStatus: 'Pending',
+            feeAmount: 1800,
+            receiptNo: ''
+          });
+          erpState.liveActionsCount++;
+          sendAutoMessage(parent, 'Welcome SMS', `Welcome to ABMT! Student ${name} (${className}, Roll #${roll}) is now active on the Parent Portal.`);
+          renderCurrentSlide();
+        });
+
+        document.getElementById('autoAddStudentBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide2Demo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+      }
+
+      if (idx === 3) {
+        document.querySelectorAll('[data-att-id]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.attId);
+            const val = btn.dataset.attVal;
+            const st = erpState.students.find(s => s.id === id);
+            if (st) {
+              st.status = val;
+              erpState.liveActionsCount++;
+              soundEngine.playCheckClick();
+              if (val === 'A') {
+                sendAutoMessage(st.parent, 'SMS', `Assalamu Alaikum. Your ward ${st.name} (${st.className}) is marked ABSENT today at ABMT.`);
+              } else {
+                showToast(`${st.name} marked ${val === 'P' ? 'Present' : 'On Leave'}`);
+              }
+              renderCurrentSlide();
+            }
+          });
+        });
+
+        document.getElementById('autoAttBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide3Demo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+
+        document.getElementById('markAllPresentBtn').addEventListener('click', () => {
+          erpState.students.forEach(s => s.status = 'P');
+          erpState.liveActionsCount++;
+          soundEngine.playCheckClick();
+          showToast('All students marked Present!');
+          renderCurrentSlide();
+        });
+      }
+
+      if (idx === 4) {
+        const form = document.getElementById('cwHwForm');
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const className = document.getElementById('cwClass').value;
+          const subject = document.getElementById('cwSubject').value;
+          const dueDate = document.getElementById('hwDue').value;
+          const chapter = document.getElementById('cwChapter').value.trim();
+          const classwork = document.getElementById('cwDetails').value.trim();
+          const homework = document.getElementById('hwDetails').value.trim();
+          const topicCompleted = document.getElementById('cwCompletedCheck').checked;
+          if (!chapter || !classwork || !homework) return;
+
+          erpState.academicLogs.unshift({
+            id: 'log-' + Date.now(),
+            date: '17 Nov 2026',
+            className, subject,
+            teacher: 'Mr. Mehraj Wani',
+            chapter, classwork, topicCompleted, homework, dueDate,
+            parentChecked: false,
+            adminVerified: false,
+            timestamp: 'Just now'
+          });
+          erpState.liveActionsCount++;
+          sendAutoMessage(`${className} Parents`, 'App Alert', `New ${subject} Classwork & Homework posted (${chapter}). Due: ${dueDate}.`);
+          renderCurrentSlide();
+        });
+
+        document.getElementById('autoTypeCwHwBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide4Demo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+      }
+
+      // Slide 6: All-Subjects Diary Broadcast
+      if (idx === 5) {
+        document.querySelectorAll('[data-diary-opt]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            erpState.diarySendOptions[cb.dataset.diaryOpt] = cb.checked;
+            soundEngine.playCheckClick();
+            renderCurrentSlide();
+          });
+        });
+
+        document.getElementById('sendDiaryNowBtn').addEventListener('click', () => {
+          soundEngine.init();
+          executeDiaryBroadcast();
+        });
+
+        document.getElementById('autoSendDiaryBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide5DiaryDemo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+      }
+
+      // Slide 7: Exams
+      if (idx === 6) {
+        document.querySelectorAll('[data-mark-idx]').forEach(input => {
+          input.addEventListener('input', () => {
+            const subIdx = Number(input.dataset.markIdx);
+            const field = input.dataset.markField;
+            const maxVal = field === 'f3' ? 40 : 30;
+            let val = Number(input.value);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > maxVal) val = maxVal;
+            erpState.marksStudent.subjects[subIdx][field] = val;
+
+            const sub = erpState.marksStudent.subjects[subIdx];
+            const rowSum = (Number(sub.f1) || 0) + (Number(sub.f2) || 0) + (Number(sub.f3) || 0);
+            input.closest('tr').lastElementChild.textContent = `${rowSum} / ${sub.max}`;
+
+            const totals = getMarksTotals();
+            document.getElementById('mcTotal').textContent = `${totals.obtained}/${totals.max}`;
+            document.getElementById('mcPct').textContent = `${totals.pct}%`;
+            document.getElementById('mcGrade').textContent = totals.grade;
+            document.getElementById('mcRemark').textContent = totals.remark;
+          });
+        });
+
+        document.getElementById('demoMarksBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide6ExamsDemo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+      }
+
+      // Slide 8: Fees
+      if (idx === 7) {
+        document.querySelectorAll('[data-pay-fee]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.payFee);
+            const st = erpState.students.find(s => s.id === id);
+            if (st) {
+              st.feeStatus = 'Paid';
+              st.receiptNo = 'ABMT-2026-' + Math.floor(200 + Math.random() * 799);
+              erpState.lastReceipt = st;
+              erpState.liveActionsCount++;
+              sendAutoMessage(st.parent, 'SMS Receipt', `Fee of ₹${st.feeAmount} received for ${st.name}. Receipt #${st.receiptNo}.`);
+              renderCurrentSlide();
+            }
+          });
+        });
+        document.querySelectorAll('[data-view-receipt]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.viewReceipt);
+            erpState.lastReceipt = erpState.students.find(s => s.id === id);
+            soundEngine.playCheckClick();
+            renderCurrentSlide();
+          });
+        });
+        document.getElementById('autoFeeBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide7FeesDemo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+      }
+
+      // Slide 9: Parent Portal
+      if (idx === 8) {
+        document.querySelectorAll('[data-parent-hw]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const log = erpState.academicLogs.find(l => l.id === cb.dataset.parentHw);
+            if (log) {
+              log.parentChecked = cb.checked;
+              erpState.liveActionsCount++;
+              soundEngine.playCheckClick();
+              showToast(cb.checked ? `${log.subject} homework marked Done by Parent!` : 'Homework unchecked');
+              renderCurrentSlide();
+            }
+          });
+        });
+        document.getElementById('autoParentCheckBtn').addEventListener('click', async () => {
+          soundEngine.init();
+          const runId = ++erpState.autoRunId;
+          await runSlide8ParentDemo(runId);
+          if (runId === erpState.autoRunId) setAutoBanner(false);
+        });
+      }
+
+      // Slide 10: Principal Audit
+      if (idx === 9) {
+        document.querySelectorAll('[data-verify-teacher]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const t = erpState.teachers.find(x => x.id === btn.dataset.verifyTeacher);
+            if (t) {
+              t.verified = !t.verified;
+              t.cwDone = true;
+              t.hwDone = true;
+              erpState.liveActionsCount++;
+              soundEngine.playCheckClick();
+              showToast(t.verified ? `Verified ${t.name}'s daily logs!` : `Marked ${t.name} as pending`);
+              renderCurrentSlide();
+            }
+          });
+        });
+
+        document.getElementById('verifyAllBtn').addEventListener('click', () => {
+          erpState.teachers.forEach(t => { t.attendanceDone = true; t.cwDone = true; t.hwDone = true; t.verified = true; });
+          erpState.liveActionsCount++;
+          soundEngine.playMessageSent();
+          showToast('All teacher daily logs verified by Principal!');
+          renderCurrentSlide();
+        });
+      }
+    }
+
+    // =========================================================================
+    // 7. GLOBAL NAVIGATION & HEADER CONTROLS
+    // =========================================================================
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      stopAllAutoDemos();
+      if (erpState.currentSlide > 0) { erpState.currentSlide--; renderCurrentSlide(); }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      stopAllAutoDemos();
+      if (erpState.currentSlide < slidesMeta.length - 1) { erpState.currentSlide++; renderCurrentSlide(); }
+    });
+
+    document.getElementById('toggleMenuBtn').addEventListener('click', () => {
+      document.getElementById('slideMenu').classList.toggle('hidden');
+    });
+
+    document.getElementById('fullAutoDemoBtn').addEventListener('click', () => {
+      if (erpState.isFullAutoPlaying) stopAllAutoDemos();
+      else startFullAutoDemo();
+    });
+
+    document.getElementById('stopAutoBtn').addEventListener('click', () => stopAllAutoDemos());
+
+    document.getElementById('soundToggleBtn').addEventListener('click', () => {
+      soundEngine.enabled = !soundEngine.enabled;
+      const btn = document.getElementById('soundToggleBtn');
+      if (soundEngine.enabled) {
+        soundEngine.init();
+        soundEngine.playCheckClick();
+        btn.textContent = '🔊 Sound On';
+        btn.classList.remove('text-slate-400');
+        btn.classList.add('text-emerald-300');
+      } else {
+        btn.textContent = '🔇 Muted';
+        btn.classList.remove('text-emerald-300');
+        btn.classList.add('text-slate-400');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'ArrowRight' && erpState.currentSlide < slidesMeta.length - 1) {
+        stopAllAutoDemos(); erpState.currentSlide++; renderCurrentSlide();
+      } else if (e.key === 'ArrowLeft' && erpState.currentSlide > 0) {
+        stopAllAutoDemos(); erpState.currentSlide--; renderCurrentSlide();
+      }
+    });
+
+    document.querySelectorAll('[data-quick-role]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        stopAllAutoDemos();
+        erpState.currentSlide = Number(btn.dataset.quickRole);
+        renderCurrentSlide();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    const speedSel = document.getElementById('speedSelect');
+    if (speedSel) {
+      speedSel.addEventListener('change', () => {
+        erpState.speedMultiplier = Number(speedSel.value) || 1.35;
+        showToast(`Presentation speed set to ${speedSel.options[speedSel.selectedIndex].text}`, 'info');
+      });
+    }
+
+    const fsBtn = document.getElementById('fullscreenBtn');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', () => {
+        try {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {
+              showToast('Press F11 for full screen on your browser', 'info');
+            });
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        } catch (e) {
+          showToast('Press F11 for full screen on your browser', 'info');
+        }
+      });
+      document.addEventListener('fullscreenchange', () => {
+        fsBtn.textContent = document.fullscreenElement ? '✕ Exit Full' : '⛶ Full Screen';
+      });
+    }
+
+    // Initial Render
+    renderCurrentSlide();
+  </script>
+</body>
+</html>
